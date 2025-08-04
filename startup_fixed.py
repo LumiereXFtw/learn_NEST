@@ -70,7 +70,7 @@ def main():
         
         conn.commit()
         
-        # Create initial admin user if no users exist
+        # Create initial admin user if no users exist (after import)
         c.execute('SELECT COUNT(*) FROM users')
         user_count = c.fetchone()[0]
         
@@ -106,19 +106,53 @@ def main():
             print("   Instructor: username='instructor', password='instructor123'")
             print("   Student: username='student', password='student123'")
         
-        conn.close()
-        print("✅ Database initialized successfully")
-        
         # Try to import existing data if available
         try:
             if os.path.exists('database_export.json'):
                 print("📥 Found database export, importing data...")
-                from import_db import import_database
-                import_database()
+                import json
+                
+                # Load data from JSON
+                with open('database_export.json', 'r') as f:
+                    data = json.load(f)
+                
+                print("📊 Importing database data...")
+                
+                for table, rows in data.items():
+                    if not rows:
+                        continue
+                        
+                    print(f"📥 Importing {len(rows)} rows to {table}")
+                    
+                    for row in rows:
+                        # Remove id if it exists (let SQLite auto-generate)
+                        if 'id' in row:
+                            del row['id']
+                        
+                        # Build INSERT statement
+                        columns = list(row.keys())
+                        placeholders = ', '.join(['?' for _ in columns])
+                        column_names = ', '.join(columns)
+                        
+                        query = f"INSERT INTO {table} ({column_names}) VALUES ({placeholders})"
+                        values = list(row.values())
+                        
+                        try:
+                            c.execute(query, values)
+                        except Exception as e:
+                            print(f"⚠️ Skipping row in {table}: {e}")
+                            continue
+                
+                conn.commit()
                 print("✅ Database data imported successfully!")
+            else:
+                print("📋 No database_export.json found, using initial users only")
         except Exception as e:
             print(f"⚠️ Data import failed: {e}")
             print("🚀 Continuing with initial users only...")
+        
+        conn.close()
+        print("✅ Database initialized successfully")
         
     except Exception as e:
         print(f"❌ Database initialization failed: {e}")
