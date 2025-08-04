@@ -429,6 +429,49 @@ def ping():
     """Simple ping endpoint for health checks"""
     return "pong", 200
 
+@app.route('/debug/database')
+def debug_database():
+    """Debug endpoint to check database status"""
+    try:
+        with get_db_connection() as conn:
+            c = conn.cursor()
+            
+            # Check users
+            c.execute('SELECT COUNT(*) FROM users')
+            user_count = c.fetchone()[0]
+            
+            # Check courses
+            c.execute('SELECT COUNT(*) FROM courses')
+            course_count = c.fetchone()[0]
+            
+            # Check enrollments
+            c.execute('SELECT COUNT(*) FROM enrollments')
+            enrollment_count = c.fetchone()[0]
+            
+            # Get sample users
+            c.execute('SELECT username, role, is_approved FROM users LIMIT 5')
+            users = c.fetchall()
+            
+            # Get sample courses
+            c.execute('SELECT title, creator_id FROM courses LIMIT 3')
+            courses = c.fetchall()
+            
+            return jsonify({
+                'status': 'success',
+                'database': {
+                    'users': user_count,
+                    'courses': course_count,
+                    'enrollments': enrollment_count,
+                    'sample_users': [{'username': u[0], 'role': u[1], 'approved': u[2]} for u in users],
+                    'sample_courses': [{'title': c[0], 'creator_id': c[1]} for c in courses]
+                }
+            })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
 @app.route('/home')
 @login_required
 def home_dashboard():
