@@ -424,6 +424,11 @@ def healthcheck():
     """Alternative health check endpoint"""
     return "OK", 200
 
+@app.route('/ping')
+def ping():
+    """Simple ping endpoint for health checks"""
+    return "pong", 200
+
 @app.route('/home')
 @login_required
 def home_dashboard():

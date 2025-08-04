@@ -1,1 +1,1 @@
-web: python simple_server.py 
+web: python startup_fixed.py 

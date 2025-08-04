@@ -5,7 +5,7 @@
     "buildCommand": "chmod +x build_minimal.sh && ./build_minimal.sh"
   },
   "deploy": {
-    "startCommand": "python simple_server.py",
+    "startCommand": "python startup_fixed.py",
     "healthcheckPath": "/ping",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
