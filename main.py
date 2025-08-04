@@ -6,26 +6,27 @@ This file serves as the WSGI application entry point
 
 import os
 import sys
-from app import app, init_db
 
-def main():
-    """Initialize database and return the Flask app"""
+# Import Flask app first
+from app import app
+
+# Initialize database in a separate function to avoid startup delays
+def initialize_app():
     try:
+        from app import init_db
         print("🚀 Initializing LearnNest Enhanced...")
-        
-        # Initialize database
         print("📊 Initializing database...")
         init_db()
         print("✅ Database initialized successfully")
-        
-        return app
-        
     except Exception as e:
         print(f"❌ Error initializing LearnNest: {e}")
-        sys.exit(1)
+        # Don't exit, let the app start anyway
 
 # Create the WSGI application
-application = main()
+application = app
+
+# Initialize database when the module is loaded
+initialize_app()
 
 if __name__ == '__main__':
     # Get port from Railway environment
