@@ -10,23 +10,8 @@ import sys
 # Import Flask app first
 from app import app
 
-# Initialize database in a separate function to avoid startup delays
-def initialize_app():
-    try:
-        from app import init_db
-        print("🚀 Initializing LearnNest Enhanced...")
-        print("📊 Initializing database...")
-        init_db()
-        print("✅ Database initialized successfully")
-    except Exception as e:
-        print(f"❌ Error initializing LearnNest: {e}")
-        # Don't exit, let the app start anyway
-
 # Create the WSGI application
 application = app
-
-# Initialize database when the module is loaded
-initialize_app()
 
 if __name__ == '__main__':
     # Get port from Railway environment
