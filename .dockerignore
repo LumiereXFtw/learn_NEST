@@ -1,0 +1,19 @@
+# Ignore uploads and binary files
+uploads/
+assignment_uploads/
+static/uploads/
+*.db
+*.db-shm
+*.db-wal
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.env
+*.log
+.DS_Store
+Thumbs.db 
