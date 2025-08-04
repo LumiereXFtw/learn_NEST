@@ -13,4 +13,6 @@ google-generativeai==0.3.2
 youtube-transcript-api==0.6.1
 gunicorn==21.2.0
 eventlet==0.33.3
-python-dotenv==1.0.0 
+python-dotenv==1.0.0
+# Railway-specific optimizations
+gunicorn==21.2.0 
