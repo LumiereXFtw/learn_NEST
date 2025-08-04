@@ -4,10 +4,17 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "python railway_start.py",
+    "startCommand": "python main.py",
     "healthcheckPath": "/",
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
+  },
+  "environments": {
+    "production": {
+      "variables": {
+        "FLASK_ENV": "production"
+      }
+    }
   }
 } 
