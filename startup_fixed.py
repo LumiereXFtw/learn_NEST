@@ -69,8 +69,56 @@ def main():
             c.execute('ALTER TABLE notifications ADD COLUMN course_id INTEGER')
         
         conn.commit()
+        
+        # Create initial admin user if no users exist
+        c.execute('SELECT COUNT(*) FROM users')
+        user_count = c.fetchone()[0]
+        
+        if user_count == 0:
+            print("👤 Creating initial admin user...")
+            from werkzeug.security import generate_password_hash
+            
+            # Create admin user
+            admin_password = generate_password_hash('admin123')
+            c.execute('''INSERT INTO users 
+                        (username, password, role, is_approved, display_name, full_name, email) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?)''',
+                     ('admin', admin_password, 'admin', 1, 'System Admin', 'System Administrator', 'admin@learnnest.com'))
+            
+            # Create a test instructor
+            instructor_password = generate_password_hash('instructor123')
+            c.execute('''INSERT INTO users 
+                        (username, password, role, is_approved, display_name, full_name, email) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?)''',
+                     ('instructor', instructor_password, 'creator', 1, 'Test Instructor', 'Test Instructor', 'instructor@learnnest.com'))
+            
+            # Create a test student
+            student_password = generate_password_hash('student123')
+            c.execute('''INSERT INTO users 
+                        (username, password, role, is_approved, display_name, full_name, email) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?)''',
+                     ('student', student_password, 'student', 1, 'Test Student', 'Test Student', 'student@learnnest.com'))
+            
+            conn.commit()
+            print("✅ Initial users created successfully!")
+            print("📋 Login Credentials:")
+            print("   Admin: username='admin', password='admin123'")
+            print("   Instructor: username='instructor', password='instructor123'")
+            print("   Student: username='student', password='student123'")
+        
         conn.close()
         print("✅ Database initialized successfully")
+        
+        # Try to import existing data if available
+        try:
+            if os.path.exists('database_export.json'):
+                print("📥 Found database export, importing data...")
+                from import_db import import_database
+                import_database()
+                print("✅ Database data imported successfully!")
+        except Exception as e:
+            print(f"⚠️ Data import failed: {e}")
+            print("🚀 Continuing with initial users only...")
         
     except Exception as e:
         print(f"❌ Database initialization failed: {e}")
