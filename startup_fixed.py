@@ -20,8 +20,13 @@ def main():
         # Import database connection function
         import sqlite3
         
-        # Create database connection
-        conn = sqlite3.connect('database.db')
+        # Try to use existing database file first
+        if os.path.exists('database_railway.db'):
+            print("📁 Using existing database file...")
+            conn = sqlite3.connect('database_railway.db')
+        else:
+            print("📁 Creating new database...")
+            conn = sqlite3.connect('database.db')
         c = conn.cursor()
         
         # Create all tables
@@ -106,50 +111,44 @@ def main():
             print("   Instructor: username='instructor', password='instructor123'")
             print("   Student: username='student', password='student123'")
         
-        # Try to import existing data if available
-        try:
-            if os.path.exists('database_export.json'):
-                print("📥 Found database export, importing data...")
-                import json
-                
-                # Load data from JSON
-                with open('database_export.json', 'r') as f:
-                    data = json.load(f)
-                
-                print("📊 Importing database data...")
-                
-                for table, rows in data.items():
-                    if not rows:
-                        continue
-                        
-                    print(f"📥 Importing {len(rows)} rows to {table}")
-                    
-                    for row in rows:
-                        # Remove id if it exists (let SQLite auto-generate)
-                        if 'id' in row:
-                            del row['id']
-                        
-                        # Build INSERT statement
-                        columns = list(row.keys())
-                        placeholders = ', '.join(['?' for _ in columns])
-                        column_names = ', '.join(columns)
-                        
-                        query = f"INSERT INTO {table} ({column_names}) VALUES ({placeholders})"
-                        values = list(row.values())
-                        
-                        try:
-                            c.execute(query, values)
-                        except Exception as e:
-                            print(f"⚠️ Skipping row in {table}: {e}")
-                            continue
-                
-                conn.commit()
-                print("✅ Database data imported successfully!")
-            else:
-                print("📋 No database_export.json found, using initial users only")
-        except Exception as e:
-            print(f"⚠️ Data import failed: {e}")
-            print("🚀 Continuing with initial users only...")
+        # Check if we have a complete database
+        c.execute('SELECT COUNT(*) FROM users')
+        user_count = c.fetchone()[0]
+        
+        if user_count > 0:
+            print(f"✅ Database has {user_count} users - using existing data")
+        else:
+            print("📋 Database is empty - creating initial users")
+            # Create initial users only if database is empty
+            from werkzeug.security import generate_password_hash
+            
+            # Create admin user
+            admin_password = generate_password_hash('admin123')
+            c.execute('''INSERT INTO users 
+                        (username, password, role, is_approved, display_name, full_name, email) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?)''',
+                     ('admin', admin_password, 'admin', 1, 'System Admin', 'System Administrator', 'admin@learnnest.com'))
+            
+            # Create a test instructor
+            instructor_password = generate_password_hash('instructor123')
+            c.execute('''INSERT INTO users 
+                        (username, password, role, is_approved, display_name, full_name, email) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?)''',
+                     ('instructor', instructor_password, 'creator', 1, 'Test Instructor', 'Test Instructor', 'instructor@learnnest.com'))
+            
+            # Create a test student
+            student_password = generate_password_hash('student123')
+            c.execute('''INSERT INTO users 
+                        (username, password, role, is_approved, display_name, full_name, email) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?)''',
+                     ('student', student_password, 'student', 1, 'Test Student', 'Test Student', 'student@learnnest.com'))
+            
+            conn.commit()
+            print("✅ Initial users created successfully!")
+            print("📋 Login Credentials:")
+            print("   Admin: username='admin', password='admin123'")
+            print("   Instructor: username='instructor', password='instructor123'")
+            print("   Student: username='student', password='student123'")
         
         conn.close()
         print("✅ Database initialized successfully")
